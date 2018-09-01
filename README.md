@@ -1,6 +1,8 @@
 # SingTownSerialport
 
-An easy to use serial port tool. Windows, Linux, MacOS
+An easy to use serial port tool. Windows, Linux, MacOS.
+
+**NOT** suppport Windows XP.
 
 - [x] Serial Port transfer
 - [ ] i18n
