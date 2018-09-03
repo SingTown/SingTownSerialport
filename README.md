@@ -8,6 +8,7 @@ An easy to use serial port tool. Windows, Linux, MacOS.
 - [ ] i18n
   - [ ] English
   - [x] 中文
+- [ ] Auto upgrade
 - [x] Graph plotter like Arduino IDE
 - [x] Escape Char \\, \t, \r, \n, \b, \f
 
