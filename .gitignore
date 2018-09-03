@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+build/*
+!build/icons/
+
+package-lock.json
+*.log
+.vscode
