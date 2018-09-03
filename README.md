@@ -2,6 +2,8 @@
 
 An easy to use serial port tool. Windows, Linux, MacOS.
 
+![snapshot](https://github.com/singtown/singtownserialport/raw/master/static/snapshot.png)
+
 **NOT** suppport Windows XP.
 
 - [x] Serial Port transfer
