@@ -6,13 +6,36 @@ An easy to use serial port tool. Windows, Linux, MacOS.
 
 **NOT** suppport Windows XP.
 
-- [x] Serial Port transfer
-- [ ] i18n
-  - [ ] English
-  - [x] 中文
-- [ ] Auto upgrade
-- [x] Graph plotter like Arduino IDE
-- [x] Escape Char \\, \t, \r, \n, \b, \f
+### Chart
+
+If the software receives data in a specific format, you can display a line chart, just like the Arduino IDE.
+Fromat: variable + '\r\n'
+
+#### Arduino:
+```Arduino
+void setup() {
+  Serial.begin(9600);
+}
+ 
+void loop() {
+  Serial.println(1);
+  delay(100)
+}
+```
+
+#### MicroPython:
+```python
+from pyb import UART
+uart = UART(3, 9600)
+ 
+void loop() {
+  uart.write(str(1)+'\r\n')
+}
+```
+
+### Escape Char
+
+Support Escape Char: \\, \t, \r, \n, \b, \f
 
 ### Build Setup
 
