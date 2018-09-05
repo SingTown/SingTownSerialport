@@ -267,7 +267,10 @@
           str = raw.replace(/\\\\/g, '\\').replace(/\\t/g, '\t').replace(/\\r/g, '\r').replace(/\\n/g, '\n').replace(/\\b/g, '\b').replace(/\\f/g, '\f')
         }
         for (let i = 0; i < str.length; i++) {
-          array.push(str[i].charCodeAt())
+          let utf8 = iconv.encode(str[i], 'utf8')
+          for (let j = 0; j < utf8.length; j++) {
+            array.push(utf8[j])
+          }
         }
         return array
       },
@@ -280,60 +283,6 @@
           return '星瞳科技'
         } else {
           return 'www.singtown.com'
-        }
-      },
-      rxData: function () {
-        if (this.rxDecode === 'binary') {
-          let data = []
-          for (let i = 0; i < this.rxArray.length; i++) {
-            let bit8 = ''
-            let d = this.rxArray[i].toString(2)
-            for (let j = 0; j < 8 - d.length; j++) {
-              bit8 += '0'
-            }
-            data.push(bit8 + d)
-          }
-          return data
-        } else if (this.rxDecode === 'hex') {
-          let data = []
-          for (let i = 0; i < this.rxArray.length; i++) {
-            let bit8 = ''
-            let d = this.rxArray[i].toString(16)
-            for (let j = 0; j < 2 - d.length; j++) {
-              bit8 += '0'
-            }
-            data.push(bit8 + d)
-          }
-          return data
-        } else {
-          return iconv.decode(Buffer.from(this.rxArray), this.rxDecode)
-        }
-      },
-      txData: function () {
-        if (this.txDecode === 'binary') {
-          let data = []
-          for (let i = 0; i < this.txArray.length; i++) {
-            let bit8 = ''
-            let d = this.txArray[i].toString(2)
-            for (let j = 0; j < 8 - d.length; j++) {
-              bit8 += '0'
-            }
-            data.push(bit8 + d)
-          }
-          return data
-        } else if (this.txDecode === 'hex') {
-          let data = []
-          for (let i = 0; i < this.txArray.length; i++) {
-            let bit8 = ''
-            let d = this.txArray[i].toString(16)
-            for (let j = 0; j < 2 - d.length; j++) {
-              bit8 += '0'
-            }
-            data.push(bit8 + d)
-          }
-          return data
-        } else {
-          return iconv.decode(Buffer.from(this.txArray), this.txDecode)
         }
       }
     },
@@ -396,15 +345,8 @@
         this.port.close()
       },
       write: function () {
-        const raw = this.inputText
-        let str = raw
-        if (this.enableEscapeChar) {
-          str = raw.replace(/\\\\/g, '\\').replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\t/g, '\t').replace(/\\b/g, '\b').replace(/\\f/g, '\f')
-        }
-        for (let i = 0; i < str.length; i++) {
-          let data = str[i].charCodeAt()
-          this.port.write([data])
-        }
+        const data = this.sendData
+        this.port.write(data)
       }
     }
   }
