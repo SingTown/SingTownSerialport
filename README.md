@@ -2,6 +2,10 @@
 
 An easy to use serial port tool. Windows, Linux, MacOS.
 
+中文项目介绍以及软件下载: https://singtown.com/learn/49844/
+
+Software downloads: https://github.com/SingTown/SingTownSerialport/releases
+
 ![snapshot](https://github.com/singtown/singtownserialport/raw/master/static/snapshot.png)
 
 **NOT** suppport Windows XP.
