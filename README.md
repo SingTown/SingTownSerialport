@@ -14,9 +14,18 @@ An easy to use serial port tool. Windows, Linux, MacOS.
 - [x] Graph plotter like Arduino IDE
 - [x] Escape Char \\, \t, \r, \n, \b, \f
 
+### Build Setup
 
-#### Build Setup
+#### Environment
 
+nodejs: https://nodejs.org/en/
+
+for Windows:
+```
+npm install --global --production windows-build-tools
+```
+
+#### Build
 ``` bash
 # git clone
 git clone https://github.com/SingTown/SingTownSerialport.git
