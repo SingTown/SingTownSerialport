@@ -3,6 +3,10 @@
     <Col span="12" class="sendBox">
       <Card dis-hover style="margin: 10px">
         <div slot="title" >串口设置</div>
+        <a href="#" slot="extra" @click.prevent="advancedSetting=!advancedSetting">
+          <Icon type="ios-loop-strong"></Icon>
+          More
+        </a>
         <Form :label-width="50">
           <FormItem label="串口">
             <Select v-model="comName" v-bind:disabled="connected">
@@ -24,7 +28,7 @@
               <Option value="115200">115200</Option>
             </Select>
           </FormItem>
-          <FormItem label="数据位">
+          <FormItem label="数据位" v-show="advancedSetting">
             <Select v-model="databit" v-bind:disabled="connected">
               <Option value="5">5</Option>
               <Option value="6">6</Option>
@@ -32,7 +36,7 @@
               <Option value="8">8</Option>
             </Select>
           </FormItem>
-          <FormItem label="校验位">
+          <FormItem label="校验位" v-show="advancedSetting">
             <Select v-model="paritybit" v-bind:disabled="connected">
               <Option value="N">无</Option>
               <Option value="O">奇</Option>
@@ -41,7 +45,7 @@
               <Option value="L">低</Option>
             </Select>
           </FormItem>
-          <FormItem label="停止位">
+          <FormItem label="停止位" v-show="advancedSetting">
             <Select v-model="stopbit" v-bind:disabled="connected">
               <Option value="1">1</Option>
               <Option value="2">2</Option>
@@ -54,7 +58,7 @@
             <Button v-else type="error" @click="disconnect">
               断开
             </Button>
-            <Button to="https://singtown.com/learn/49844/" target="_blank" type="text">教程</Button>
+            <Button type="text" @click.prevent="openURL('https://github.com/SingTown/SingTownSerialport')">教程</Button>
           </FormItem>
         </Form>
       </Card>
@@ -62,7 +66,7 @@
         <RadioGroup v-model="prDecode">
           <Radio label="binary"></Radio>
           <Radio label="hex"></Radio>
-          <Radio label="string"></Radio>
+          <Radio label="utf8"></Radio>
         </RadioGroup>
         <div v-if="sendData">
           <div v-if="prDecode === 'binary'">
@@ -85,7 +89,7 @@
         <RadioGroup v-model="sendEncode">
           <Radio label="binary"></Radio>
           <Radio label="hex"></Radio>
-          <Radio label="ascii"></Radio>
+          <!-- <Radio label="ascii"></Radio> -->
           <Radio label="utf8"></Radio>
         </RadioGroup>
         <Checkbox v-model="enableEscapeChar">开启转义字符</Checkbox>
@@ -97,9 +101,9 @@
     <Col span="12" class="sendBox">
       <Card dis-hover style="margin: 10px; flex-grow: 2; overflow:scroll;">
         <div slot="title">接收历史</div>
-        <a href="#" slot="extra" @click.prevent="enableChart=!enableChart">
+        <a href="#" slot="extra" @click.prevent="clear">
           <Icon type="ios-loop-strong"></Icon>
-          图表📈
+          Clear
         </a>
         <RadioGroup v-model="rxDecode">
           <Radio label="binary"></Radio>
@@ -118,14 +122,23 @@
           </span>
         </div>
         <div v-else-if="rxDecode === 'ascii'">
-          <pre>{{asciiRxData}}</pre>
+          <pre v-if="asciiRxData.length">{{asciiRxData}}</pre>
         </div>
         <div v-else-if="rxDecode === 'utf8'">
-          <pre>{{utf8RxData}}</pre>
+          <pre v-if="asciiRxData.length">{{utf8RxData}}</pre>
         </div>
       </Card>
-      <Card dis-hover v-show="enableChart" style="margin: 10px;">
-        <ve-line :data = "chartData" height='300px' :legend-visible="false"></ve-line>
+      <Card dis-hover style="margin: 10px;">
+        <div slot="title">图表📈</div>
+        <a href="#" slot="extra" v-if="!enableChart" @click.prevent="enableChart=!enableChart">
+          <Icon type="ios-loop-strong"></Icon>
+          Display
+        </a>
+        <a href="#" slot="extra" v-else @click.prevent="enableChart=!enableChart">
+          <Icon type="ios-loop-strong"></Icon>
+          Hide
+        </a>
+        <ve-line v-show="enableChart" :data = "chartData" height='300px' :legend-visible="false"></ve-line>
       </Card>
     </Col>
   </Row>
@@ -136,6 +149,7 @@
   const ByteLength = require('@serialport/parser-byte-length')
   const Readline = require('@serialport/parser-readline')
   const iconv = require('iconv-lite')
+  const shell = require('electron').shell
   export default {
     name: 'SingTownSerialport',
     data () {
@@ -149,16 +163,13 @@
         databit: '8',
         paritybit: 'N',
         stopbit: '1',
-        sendEncode: 'ascii',
+        advancedSetting: false,
+        sendEncode: 'utf8',
         prDecode: 'binary',
         rxDecode: 'utf8',
         inputText: '',
         enableEscapeChar: true,
-        txNewline: '\\r\\n',
-        rxNewline: '\\r\\n',
         enableChart: true,
-        txArray: [],
-        rxArray: [],
         binarryRxData: [],
         hexRxData: [],
         asciiRxData: '',
@@ -236,11 +247,7 @@
           }
           return array
         } else {
-          let str = ''
-          for (let j = 0; j < data.length; j++) {
-            str += String.fromCharCode(data[j])
-          }
-          return str
+          return iconv.decode(Buffer.from(data), 'utf8')
         }
       },
       sendData: function () {
@@ -299,6 +306,16 @@
           }
         })
       },
+      clear: function () {
+        this.rxArray = []
+        this.date = new Date()
+        this.startDate = this.date.getTime()
+        this.binarryRxData = []
+        this.hexRxData = []
+        this.asciiRxData = []
+        this.utf8RxData = []
+        this.chartData.rows = []
+      },
       connect: function () {
         if (!this.comName) {
           this.$Notice.error({
@@ -312,15 +329,8 @@
             title: '串口已打开',
             desc: this.comName
           })
+          this.clear()
           this.connected = true
-          this.rxArray = []
-          this.date = new Date()
-          this.startDate = this.date.getTime()
-          this.binarryRxData = []
-          this.hexRxData = []
-          this.asciiRxData = []
-          this.utf8RxData = []
-          this.chartData.rows = []
         })
         this.port.on('error', (err) => {
           this.$Notice.error({
@@ -347,6 +357,9 @@
       write: function () {
         const data = this.sendData
         this.port.write(data)
+      },
+      openURL: function (url) {
+        shell.openExternal(url)
       }
     }
   }
