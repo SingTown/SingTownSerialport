@@ -9,6 +9,7 @@ An easy to use serial port tool. Windows, Linux, MacOS.
 ### Chart
 
 If the software receives data in a specific format, you can display a line chart, just like the Arduino IDE.
+
 Fromat: variable + '\r\n'
 
 #### Arduino:
