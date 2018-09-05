@@ -18,5 +18,9 @@
     </script>
 
     <!-- webpack builds are automatically injected -->
+    <script>
+      const json = require('path').join(require('electron').remote.app.getAppPath(), '/package.json').replace(/\\/g, '\\\\')
+      document.title = document.title + ' V' + require(json).version
+    </script>
   </body>
 </html>

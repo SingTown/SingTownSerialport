@@ -1,6 +1,6 @@
 {
   "name": "SingTownSerialport",
-  "version": "0.0.2",
+  "version": "0.3.0",
   "author": "kidswong999",
   "description": "An easy to use serial port tool. Windows, Linux, MacOS.",
   "license": "MIT",
