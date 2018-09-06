@@ -38,11 +38,11 @@
           </FormItem>
           <FormItem label="校验位" v-show="advancedSetting">
             <Select v-model="paritybit" v-bind:disabled="connected">
-              <Option value="N">无</Option>
-              <Option value="O">奇</Option>
-              <Option value="E">偶</Option>
-              <Option value="H">高</Option>
-              <Option value="L">低</Option>
+              <Option value="none">无</Option>
+              <Option value="odd">奇</Option>
+              <Option value="even">偶</Option>
+              <Option value="mark">高</Option>
+              <Option value="space">低</Option>
             </Select>
           </FormItem>
           <FormItem label="停止位" v-show="advancedSetting">
@@ -99,18 +99,19 @@
       </Card>
     </Col>
     <Col span="12" class="sendBox">
-      <Card dis-hover style="margin: 10px; flex-grow: 2; overflow:scroll;">
-        <div slot="title">接收历史</div>
-        <a href="#" slot="extra" @click.prevent="clear">
-          <Icon type="ios-loop-strong"></Icon>
-          Clear
-        </a>
+      <Card dis-hover style="margin: 10px;">
         <RadioGroup v-model="rxDecode">
           <Radio label="binary"></Radio>
           <Radio label="hex"></Radio>
           <Radio label="ascii"></Radio>
           <Radio label="utf8"></Radio>
         </RadioGroup>
+        <a href="#" @click.prevent="clear" style="float: right;">
+          <Icon type="ios-loop-strong"></Icon>
+          Clear
+        </a>
+      </Card>
+      <Card dis-hover style="margin: 10px; flex-grow: 2;">
         <div v-if="rxDecode === 'binary'">
           <span v-for="rx in binarryRxData">
             {{rx}}
@@ -124,7 +125,7 @@
         <div v-else-if="rxDecode === 'ascii'">
           <pre v-if="asciiRxData.length">{{asciiRxData}}</pre>
         </div>
-        <div v-else-if="rxDecode === 'utf8'">
+        <div v-else-if="rxDecode === 'utf8'" style="height:100%">
           <pre v-if="asciiRxData.length">{{utf8RxData}}</pre>
         </div>
       </Card>
@@ -161,7 +162,7 @@
         baudrate: '9600',
         startbit: 0,
         databit: '8',
-        paritybit: 'N',
+        paritybit: 'none',
         stopbit: '1',
         advancedSetting: false,
         sendEncode: 'utf8',
@@ -186,11 +187,17 @@
       this.asciiStream = iconv.decodeStream('ascii')
       this.asciiStream.on('data', (str) => {
         this.asciiRxData += str
+        if (this.asciiRxData.length > 10000) {
+          this.asciiRxData = this.asciiRxData.substr(str.length)
+        }
       })
 
       this.utf8Stream = iconv.decodeStream('utf8')
       this.utf8Stream.on('data', (str) => {
         this.utf8RxData += str
+        if (this.utf8RxData.length > 10000) {
+          this.utf8RxData = this.utf8RxData.substr(str.length)
+        }
       })
 
       this.binaryStream = new ByteLength({length: 1})
@@ -201,6 +208,9 @@
           bit8 = '0' + bit8
         }
         this.binarryRxData.push(bit8)
+        if (this.binarryRxData.length > 1000) {
+          this.binarryRxData.shift()
+        }
       })
       this.hexStream = new ByteLength({length: 1})
       this.hexStream.on('data', (data) => {
@@ -210,14 +220,19 @@
           bit8 = '0' + bit8
         }
         this.hexRxData.push(bit8)
+        if (this.hexRxData.length > 1000) {
+          this.hexRxData.shift()
+        }
       })
       this.charStream = new Readline({ delimiter: '\r\n' })
       this.charStream.on('data', (str) => {
-        let num = parseInt(str)
-        if (num) {
+        if (str) {
           let t = (new Date()).valueOf() - this.startDate
-          let x = num
-          this.chartData.rows.push({'time': t.toString(), 'x': x})
+          // let x = num
+          this.chartData.rows.push({'time': t.toString(), 'x': str})
+          if (this.chartData.rows.length > 1000) {
+            this.chartData.rows.shift()
+          }
         }
       })
     },
@@ -323,7 +338,12 @@
           })
           return
         }
-        this.port = new SerialPort(this.comName)
+        this.port = new SerialPort(this.comName, {
+          baudRate: parseInt(this.baudrate),
+          dataBits: parseInt(this.databit),
+          parity: this.paritybit,
+          stopBits: parseInt(this.stopbit)
+        })
         this.port.on('open', () => {
           this.$Notice.success({
             title: '串口已打开',
@@ -368,6 +388,7 @@
 .sendBox {
   height: 100%;
   display: flex;
+  flex-flow: column nowrap;
   flex-direction: column;
 }
 </style>
