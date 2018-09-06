@@ -111,23 +111,23 @@
           Clear
         </a>
       </Card>
-      <Card dis-hover style="margin: 10px; flex-grow: 2;">
-        <div v-if="rxDecode === 'binary'">
-          <span v-for="rx in binarryRxData">
-            {{rx}}
-          </span>
-        </div>
-        <div v-else-if="rxDecode === 'hex'">
-          <span v-for="rx in hexRxData">
-            {{rx}}
-          </span>
-        </div>
-        <div v-else-if="rxDecode === 'ascii'">
-          <pre v-if="asciiRxData.length">{{asciiRxData}}</pre>
-        </div>
-        <div v-else-if="rxDecode === 'utf8'" style="height:100%">
-          <pre v-if="asciiRxData.length">{{utf8RxData}}</pre>
-        </div>
+      <Card id="rxArea" dis-hover style="margin: 10px; flex-grow: 2; overflow: scroll;">
+          <div v-if="rxDecode === 'binary'">
+            <span v-for="rx in binarryRxData">
+              {{rx}}
+            </span>
+          </div>
+          <div v-else-if="rxDecode === 'hex'">
+            <span v-for="rx in hexRxData">
+              {{rx}}
+            </span>
+          </div>
+          <div v-else-if="rxDecode === 'ascii'">
+            <pre v-if="asciiRxData.length">{{asciiRxData}}</pre>
+          </div>
+          <div v-else-if="rxDecode === 'utf8'">
+            <pre v-if="asciiRxData.length">{{utf8RxData}}</pre>
+          </div>
       </Card>
       <Card dis-hover style="margin: 10px;">
         <div slot="title">图表📈</div>
