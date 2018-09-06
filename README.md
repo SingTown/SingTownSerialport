@@ -6,7 +6,7 @@ An easy to use serial port tool. Windows, Linux, MacOS.
 
 Software downloads: https://github.com/SingTown/SingTownSerialport/releases
 
-![snapshot](https://github.com/singtown/singtownserialport/raw/master/static/snapshot.png)
+![snapshot](https://github.com/singtown/singtownserialport/raw/master/static/singtown-serialport-snapshot.png)
 
 **NOT** suppport Windows XP.
 
