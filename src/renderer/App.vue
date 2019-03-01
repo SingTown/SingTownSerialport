@@ -2,18 +2,24 @@
   <Row style="height: 100%;">
     <Col span="12" class="sendBox">
       <Card dis-hover style="margin: 10px">
-        <div slot="title" >串口设置</div>
-        <a href="#" slot="extra" @click.prevent="advancedSetting=!advancedSetting">
-          <Icon type="ios-loop-strong"></Icon>
-          More
-        </a>
-        <Form :label-width="50">
-          <FormItem label="串口">
+        <Button slot="title" v-show="!connected" type="success" @click="connect">
+          {{$t('connect')}}
+        </Button>
+        <Button slot="title" v-show="connected" type="error" @click="disconnect">
+          {{$t('disconnect')}}
+        </Button>
+        <Button slot="title" type="text" @click.prevent="openURL('https://github.com/SingTown/SingTownSerialport')">{{$t('tutorial')}}</Button>
+        <Select slot="title" v-model="lang" @on-change="changeLanguage" size="small" style="width:100px">
+          <Option value="en">English</Option>
+          <Option value="zh">简体中文</Option>
+        </Select>
+        <Form :label-width="60">
+          <FormItem :label="$t('serialport')">
             <Select v-model="comName" v-bind:disabled="connected">
               <Option v-for="p in portList" :value="p.comName" :key="p.comName">{{ p.comName }}</Option>
             </Select>
           </FormItem>
-          <FormItem label="波特率">
+          <FormItem :label="$t('baudrate')">
             <Select v-model="baudrate" v-bind:disabled="connected">
               <Option value="300">300</Option>
               <Option value="1200">1200</Option>
@@ -28,7 +34,7 @@
               <Option value="115200">115200</Option>
             </Select>
           </FormItem>
-          <FormItem label="数据位" v-show="advancedSetting">
+          <FormItem :label="$t('databit')" v-show="advancedSetting">
             <Select v-model="databit" v-bind:disabled="connected">
               <Option value="5">5</Option>
               <Option value="6">6</Option>
@@ -36,110 +42,84 @@
               <Option value="8">8</Option>
             </Select>
           </FormItem>
-          <FormItem label="校验位" v-show="advancedSetting">
+          <FormItem :label="$t('paritybit')" v-show="advancedSetting">
             <Select v-model="paritybit" v-bind:disabled="connected">
-              <Option value="none">无</Option>
-              <Option value="odd">奇</Option>
-              <Option value="even">偶</Option>
-              <Option value="mark">高</Option>
-              <Option value="space">低</Option>
+              <Option value="none">{{$t('none')}}</Option>
+              <Option value="odd">{{$t('odd')}}</Option>
+              <Option value="even">{{$t('even')}}</Option>
+              <Option value="mark">{{$t('mark')}}</Option>
+              <Option value="space">{{$t('space')}}</Option>
             </Select>
           </FormItem>
-          <FormItem label="停止位" v-show="advancedSetting">
+          <FormItem :label="$t('stopbit')" v-show="advancedSetting">
             <Select v-model="stopbit" v-bind:disabled="connected">
               <Option value="1">1</Option>
               <Option value="2">2</Option>
             </Select>
           </FormItem>
-          <FormItem>
-            <Button v-if="!connected" type="success" @click="connect">
-              连接
-            </Button>
-            <Button v-else type="error" @click="disconnect">
-              断开
-            </Button>
-            <Button type="text" @click.prevent="openURL('https://github.com/SingTown/SingTownSerialport')">教程</Button>
-          </FormItem>
         </Form>
-      </Card>
-      <Card dis-hover style="margin: 10px; flex-grow: 2; overflow:scroll;">
-        <RadioGroup v-model="prDecode">
-          <Radio label="binary"></Radio>
-          <Radio label="hex"></Radio>
-          <Radio label="utf8"></Radio>
-        </RadioGroup>
-        <div v-if="sendData">
-          <div v-if="prDecode === 'binary'">
-            <span v-for="rx in previewData">
-              {{rx}}
-            </span>
-          </div>
-          <div v-else-if="prDecode === 'hex'">
-            <span v-for="rx in previewData">
-              {{rx}}
-            </span>
-          </div>
-          <div v-else>
-            <pre>{{previewData}}</pre>
-          </div>
-        </div>
+        <Icon v-if="!advancedSetting" type="ios-arrow-down" style="cursor: pointer; position:relative; left:50%;" @click.prevent="advancedSetting=!advancedSetting" />
+        <Icon v-if="advancedSetting" type="ios-arrow-up" style="cursor: pointer; position:relative; left:50%;" @click.prevent="advancedSetting=!advancedSetting" />
       </Card>
 
+      <Card dis-hover style="margin: 10px; flex-grow: 2; overflow:scroll;">
+        {{$t('preview')}} binary
+        <Icon type="md-eye" />
+        {{previewBinary}}
+      </Card>
+      <Card dis-hover style="margin: 10px; flex-grow: 2; overflow:scroll;">
+        {{$t('preview')}} hex
+        <Icon type="md-eye" />
+        {{previewHex}}
+      </Card>
+      <Card dis-hover style="margin: 10px; flex-grow: 2; overflow:scroll;">
+        {{$t('preview')}} utf8
+        <Icon type="md-eye" />
+        {{previewString}}
+      </Card>
       <Card dis-hover style="margin: 10px; bottom: 0px;">
         <RadioGroup v-model="sendEncode">
-          <Radio label="binary"></Radio>
+          <!-- <Radio label="binary"></Radio> -->
           <Radio label="hex"></Radio>
           <!-- <Radio label="ascii"></Radio> -->
           <Radio label="utf8"></Radio>
         </RadioGroup>
-        <Checkbox v-model="enableEscapeChar">开启转义字符</Checkbox>
+        <Checkbox v-if="sendEncode === 'utf8'" v-model="enableEscapeChar">{{$t('enable_escape_char')}}</Checkbox>
         <Input v-model="inputText" type="text" :placeholder="sendExample" />
-        <Alert v-if="!sendData && inputText" type="error">格式输入错误</Alert>
-        <Button type="success" long @click="write" :disabled="!connected || !sendData || !inputText"> 发送</Button>
+        <Button type="success" long @click="write" :disabled="!connected || sendDataErr || !inputText"> {{$t('send')}} {{sendDataErr}}</Button>
       </Card>
     </Col>
     <Col span="12" class="sendBox">
-      <Card dis-hover style="margin: 10px;">
-        <RadioGroup v-model="rxDecode">
-          <Radio label="binary"></Radio>
-          <Radio label="hex"></Radio>
-          <Radio label="ascii"></Radio>
-          <Radio label="utf8"></Radio>
-        </RadioGroup>
-        <a href="#" @click.prevent="clear" style="float: right;">
-          <Icon type="ios-loop-strong"></Icon>
-          Clear
-        </a>
-      </Card>
-      <Card id="rxArea" dis-hover style="margin: 10px; flex-grow: 2; overflow: scroll;">
-          <div v-if="rxDecode === 'binary'">
-            <span v-for="rx in binarryRxData">
-              {{rx}}
-            </span>
-          </div>
-          <div v-else-if="rxDecode === 'hex'">
-            <span v-for="rx in hexRxData">
-              {{rx}}
-            </span>
-          </div>
-          <div v-else-if="rxDecode === 'ascii'">
-            <pre v-if="asciiRxData.length">{{asciiRxData}}</pre>
-          </div>
-          <div v-else-if="rxDecode === 'utf8'">
-            <pre v-if="asciiRxData.length">{{utf8RxData}}</pre>
-          </div>
+      <Card id="rxArea" dis-hover style="margin: 10px; flex-grow: 2;overflow-y: scroll;">
+        <Tabs type="card">
+          <TabPane label="binary">
+            <p v-if="binaryRxData.length" style="white-space:break-all;">
+              {{binaryRxData}}
+            </p>
+          </TabPane>
+          <TabPane label="hex">
+            <p v-if="hexRxData.length" style="white-space:break-all;">
+              {{hexRxData}}
+            </p>
+          </TabPane>
+          <TabPane label="ascii">
+            <div v-if="asciiRxData.length" style="overflow-x: scroll;">
+              <pre>{{asciiRxData}}</pre>
+            </div>
+          </TabPane>
+          <TabPane label="utf8">
+            <div v-if="utf8RxData.length" style="overflow-x: scroll;">
+              <pre>{{utf8RxData}}</pre>
+            </div>
+          </TabPane>
+          <a href="#" @click.prevent="clear" slot="extra">{{$t('clear')}}</a>
+        </Tabs>
       </Card>
       <Card dis-hover style="margin: 10px;">
-        <div slot="title">图表📈</div>
-        <a href="#" slot="extra" v-if="!enableChart" @click.prevent="enableChart=!enableChart">
-          <Icon type="ios-loop-strong"></Icon>
-          Display
-        </a>
-        <a href="#" slot="extra" v-else @click.prevent="enableChart=!enableChart">
-          <Icon type="ios-loop-strong"></Icon>
-          Hide
-        </a>
-        <ve-line v-show="enableChart" :data = "chartData" height='300px' :legend-visible="false"></ve-line>
+        <div slot="title" style="cursor: pointer" @click.prevent="enableChart=!enableChart">{{$t('chart')}}📈</div>
+        <Icon slot="extra" v-if="!enableChart" type="ios-arrow-up" style="cursor: pointer" @click.prevent="enableChart=!enableChart" />
+        <Icon slot="extra" v-if="enableChart" type="ios-arrow-down" style="cursor: pointer" @click.prevent="enableChart=!enableChart" />
+        <ve-line v-if="enableChart" :data = "chartData" height='300px' :legend-visible="false" :extend="{xAxis:{show:false}}"></ve-line>
       </Card>
     </Col>
   </Row>
@@ -155,6 +135,7 @@
     name: 'SingTownSerialport',
     data () {
       return {
+        lang: this.$i18n.locale,
         connected: false,
         port: null,
         portList: [],
@@ -166,13 +147,12 @@
         stopbit: '1',
         advancedSetting: false,
         sendEncode: 'utf8',
-        prDecode: 'binary',
         rxDecode: 'utf8',
         inputText: '',
         enableEscapeChar: true,
-        enableChart: true,
-        binarryRxData: [],
-        hexRxData: [],
+        enableChart: false,
+        binaryRxData: '',
+        hexRxData: '',
         asciiRxData: '',
         utf8RxData: '',
         chartData: {
@@ -183,7 +163,6 @@
     },
     created: function () {
       setInterval(this.scan, 1000)
-
       this.asciiStream = iconv.decodeStream('ascii')
       this.asciiStream.on('data', (str) => {
         this.asciiRxData += str
@@ -191,7 +170,6 @@
           this.asciiRxData = this.asciiRxData.substr(str.length)
         }
       })
-
       this.utf8Stream = iconv.decodeStream('utf8')
       this.utf8Stream.on('data', (str) => {
         this.utf8RxData += str
@@ -199,37 +177,19 @@
           this.utf8RxData = this.utf8RxData.substr(str.length)
         }
       })
-
-      this.binaryStream = new ByteLength({length: 1})
-      this.binaryStream.on('data', (data) => {
-        let d = data[0].toString(2)
-        let bit8 = d
-        for (let i = 0; i < 8 - d.length; i++) {
-          bit8 = '0' + bit8
-        }
-        this.binarryRxData.push(bit8)
-        if (this.binarryRxData.length > 1000) {
-          this.binarryRxData.shift()
-        }
-      })
       this.hexStream = new ByteLength({length: 1})
       this.hexStream.on('data', (data) => {
-        let d = data[0].toString(16)
-        let bit8 = d
-        for (let i = 0; i < 2 - d.length; i++) {
-          bit8 = '0' + bit8
-        }
-        this.hexRxData.push(bit8)
-        if (this.hexRxData.length > 1000) {
-          this.hexRxData.shift()
-        }
+        let hexString = '00' + data[0].toString(16).toUpperCase()
+        this.hexRxData += (' ' + hexString.slice(-2))
+        let binaryString = '00000000' + data[0].toString(2)
+        this.binaryRxData += (' ' + binaryString.slice(-8))
       })
-      this.charStream = new Readline({ delimiter: '\r\n' })
+      this.charStream = new Readline()
       this.charStream.on('data', (str) => {
         if (str) {
           let t = (new Date()).valueOf() - this.startDate
           // let x = num
-          this.chartData.rows.push({'time': t.toString(), 'x': str})
+          this.chartData.rows.push({'time': t.toString(), 'x': str.trim()})
           if (this.chartData.rows.length > 1000) {
             this.chartData.rows.shift()
           }
@@ -237,70 +197,53 @@
       })
     },
     computed: {
-      previewData: function () {
-        let data = this.sendData
-        if (this.prDecode === 'binary') {
-          let array = []
-          for (let j = 0; j < data.length; j++) {
-            let d = data[j].toString(2)
-            let bit8 = d
-            for (let i = 0; i < 8 - d.length; i++) {
-              bit8 = '0' + bit8
-            }
-            array.push(bit8)
+      previewString: function () {
+        return iconv.decode(Buffer.from(this.sendData), 'utf8')
+      },
+      previewBinary: function () {
+        let binaryString = ''
+        let s = ''
+        for (let j = 0; j < this.sendData.length; j++) {
+          s = '00000000' + this.sendData[j].toString(2)
+          binaryString += (' ' + s.slice(-8))
+        }
+        return binaryString
+      },
+      previewHex: function () {
+        let hexString = ''
+        let s = ''
+        for (let j = 0; j < this.sendData.length; j++) {
+          s = '00' + this.sendData[j].toString(16).toUpperCase()
+          hexString += (' ' + s.slice(-2))
+        }
+        return hexString
+      },
+      sendDataErr: function () {
+        if (this.sendEncode === 'hex') {
+          if (!(new RegExp('^[A-Fa-f0-9]*$')).test(this.inputText.replace(/\s+/g, ''))) {
+            return this.$t('hex_input_limit_error')
           }
-          return array
-        } else if (this.prDecode === 'hex') {
-          let array = []
-          for (let j = 0; j < data.length; j++) {
-            let d = data[j].toString(16)
-            let bit8 = d
-            for (let i = 0; i < 2 - d.length; i++) {
-              bit8 = '0' + bit8
-            }
-            array.push(bit8)
+          if (this.inputText.replace(/\s+/g, '').length % 2 !== 0) {
+            return this.$t('hex_input_length_error')
           }
-          return array
-        } else {
-          return iconv.decode(Buffer.from(data), 'utf8')
+          return null
         }
       },
       sendData: function () {
         const raw = this.inputText
-        if (!raw) {
-          return null
-        }
-        if (this.sendEncode === 'binary') {
-          if ((new RegExp('^[0-1]*$')).test(raw)) {
-            return ([parseInt(raw, 2)])
-          } else {
-            return null
-          }
-        } else if (this.sendEncode === 'hex') {
-          if ((new RegExp('^[A-Fa-f0-9]*$')).test(raw)) {
-            return ([parseInt(raw, 16)])
-          } else {
-            return null
-          }
-        }
-        let array = []
         let str = raw
-        if (this.enableEscapeChar) {
+        if (this.sendEncode === 'utf8' && this.enableEscapeChar) {
           str = raw.replace(/\\\\/g, '\\').replace(/\\t/g, '\t').replace(/\\r/g, '\r').replace(/\\n/g, '\n').replace(/\\b/g, '\b').replace(/\\f/g, '\f')
+        } else if (this.sendEncode === 'hex') {
+          str = raw.replace(/\s+/g, '')
         }
-        for (let i = 0; i < str.length; i++) {
-          let utf8 = iconv.encode(str[i], 'utf8')
-          for (let j = 0; j < utf8.length; j++) {
-            array.push(utf8[j])
-          }
-        }
-        return array
+        return iconv.encode(str, this.sendEncode)
       },
       sendExample: function () {
         if (this.sendEncode === 'binary') {
           return '00001111'
         } else if (this.sendEncode === 'hex') {
-          return 'FAFB00FF'
+          return 'FA FB 00 FF'
         } else if (this.sendEncode === 'utf8') {
           return '星瞳科技'
         } else {
@@ -308,12 +251,24 @@
         }
       }
     },
+    watch: {
+      hexRxData: function () {
+        var container = this.$el.querySelector('#rxArea')
+        if (container.scrollHeight - container.clientHeight - container.scrollTop < 100) {
+          container.scrollTop = container.scrollHeight
+        }
+      }
+    },
     methods: {
+      changeLanguage: function () {
+        this.$i18n.locale = this.lang
+        localStorage.setItem('language', this.lang)
+      },
       scan: function () {
         SerialPort.list((err, ports) => {
           if (err) {
-            this.$Notice.warning({
-              title: '串口检测错误',
+            this.$Notice.error({
+              title: this.$t('serial_port_scan_error'),
               desc: err.message
             })
           } else {
@@ -325,7 +280,7 @@
         this.rxArray = []
         this.date = new Date()
         this.startDate = this.date.getTime()
-        this.binarryRxData = []
+        this.binaryRxData = []
         this.hexRxData = []
         this.asciiRxData = []
         this.utf8RxData = []
@@ -334,7 +289,7 @@
       connect: function () {
         if (!this.comName) {
           this.$Notice.error({
-            title: '没有选择串口'
+            title: this.$t('no_serial_port_selected')
           })
           return
         }
@@ -345,27 +300,21 @@
           stopBits: parseInt(this.stopbit)
         })
         this.port.on('open', () => {
-          this.$Notice.success({
-            title: '串口已打开',
-            desc: this.comName
-          })
-          this.clear()
+          this.$Message.success(this.$t('serial_port_is_open'))
           this.connected = true
+          this.clear()
         })
         this.port.on('error', (err) => {
           this.$Notice.error({
-            title: '串口打开失败',
+            title: this.$t('serial_port_failed_to_open'),
             desc: err.message
           })
+          this.clear()
         })
         this.port.on('close', () => {
-          this.$Notice.success({
-            title: '串口已关闭',
-            desc: this.comName
-          })
+          this.$Message.warning(this.$t('serial_port_is_closed'))
           this.connected = false
         })
-        this.port.pipe(this.binaryStream)
         this.port.pipe(this.hexStream)
         this.port.pipe(this.asciiStream)
         this.port.pipe(this.utf8Stream)
