@@ -91,23 +91,23 @@
     </Col>
     <Col span="12" class="sendBox">
       <Card id="rxArea" dis-hover style="margin: 10px; flex-grow: 2;overflow-y: scroll;">
-        <Tabs type="card">
-          <TabPane label="binary">
+        <Tabs type="card" value="utf8">
+          <TabPane label="binary" name="binary">
             <p v-if="binaryRxData.length" style="white-space:break-all;">
               {{binaryRxData}}
             </p>
           </TabPane>
-          <TabPane label="hex">
+          <TabPane label="hex" name="hex">
             <p v-if="hexRxData.length" style="white-space:break-all;">
               {{hexRxData}}
             </p>
           </TabPane>
-          <TabPane label="ascii">
+          <TabPane label="ascii" name="ascii">
             <div v-if="asciiRxData.length" style="overflow-x: scroll;">
               <pre>{{asciiRxData}}</pre>
             </div>
           </TabPane>
-          <TabPane label="utf8">
+          <TabPane label="utf8" name="utf8">
             <div v-if="utf8RxData.length" style="overflow-x: scroll;">
               <pre>{{utf8RxData}}</pre>
             </div>
