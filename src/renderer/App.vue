@@ -90,30 +90,23 @@
       </Card>
     </Col>
     <Col span="12" class="sendBox">
-      <Card id="rxArea" dis-hover style="margin: 10px; flex-grow: 2;overflow-y: scroll;">
-        <Tabs type="card" value="utf8">
-          <TabPane label="binary" name="binary">
-            <p v-if="binaryRxData.length" style="white-space:break-all;">
-              {{binaryRxData}}
-            </p>
-          </TabPane>
-          <TabPane label="hex" name="hex">
-            <p v-if="hexRxData.length" style="white-space:break-all;">
-              {{hexRxData}}
-            </p>
-          </TabPane>
-          <TabPane label="ascii" name="ascii">
-            <div v-if="asciiRxData.length" style="overflow-x: scroll;">
-              <pre>{{asciiRxData}}</pre>
-            </div>
-          </TabPane>
-          <TabPane label="utf8" name="utf8">
-            <div v-if="utf8RxData.length" style="overflow-x: scroll;">
-              <pre>{{utf8RxData}}</pre>
-            </div>
-          </TabPane>
-          <a href="#" @click.prevent="clear" slot="extra">{{$t('clear')}}</a>
-        </Tabs>
+      <Card dis-hover style="margin: 10px;">
+        <RadioGroup v-model="rxDecode">
+          <Radio label="binary"></Radio>
+          <Radio label="hex"></Radio>
+          <Radio label="ascii"></Radio>
+          <Radio label="utf8"></Radio>
+        </RadioGroup>
+        <a href="#" @click.prevent="clear" style="float: right;">
+          <Icon type="ios-loop-strong"></Icon>
+          {{$t('clear')}}
+        </a>
+      </Card>
+      <Card id="rxArea" dis-hover style="margin: 0px 10px 10px; flex-grow: 2; overflow-y: scroll;">
+        <p v-if="binaryRxData.length && rxDecode=='binary'" style="white-space:break-all;">{{binaryRxData}}</p>
+        <p v-if="hexRxData.length && rxDecode=='hex'" style="white-space:break-all;">{{hexRxData}}</p>
+        <pre v-if="asciiRxData.length && rxDecode=='ascii'" style="overflow-x: scroll;">{{asciiRxData}}</pre>
+        <pre v-if="utf8RxData.length && rxDecode=='utf8'" style="overflow-x: scroll;">{{utf8RxData}}</pre>
       </Card>
       <Card dis-hover style="margin: 10px;">
         <div slot="title" style="cursor: pointer" @click.prevent="enableChart=!enableChart">{{$t('chart')}}📈</div>
